@@ -1,6 +1,6 @@
 from django.core.urlresolvers import reverse
 
-from crime.factories import GVAIncidentFactory
+from crime.factories import GVAIncidentFactory, GVAIncidentCategoryFactory
 from util.testing import BaseAPITestCase
 
 
@@ -10,7 +10,8 @@ class GVAIncidentTestCase(BaseAPITestCase):
 
     def test_get_ok(self):
         count = 3
+        category = GVAIncidentCategoryFactory.create()
         for i in range(count):
-            GVAIncidentFactory.create()
+            GVAIncidentFactory.create(categories=(category,))
         response = self.client.get(self.endpoint)
         self.assert_get_ok(response, count=count)
