@@ -5,8 +5,11 @@ from django.contrib import admin
 
 from rest_framework import routers
 
+from crime.views import GVAIncidentViewSet
+
 
 router = routers.DefaultRouter()
+router.register(r"gva-incident", GVAIncidentViewSet, base_name="gva-incident")
 
 urlpatterns = [
     url(r"^v1/", include(router.urls, namespace="api")),
