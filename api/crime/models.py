@@ -9,7 +9,7 @@ class GVAIncident(CreatedMixin, UpdatedMixin):
 
     base_path = "http://www.gunviolencearchive.org/incident/"
 
-    date = models.DateTimeField(
+    date = models.DateField(
         _("date"))
     tags = models.ManyToManyField(
         "taxonomy.Tag",
