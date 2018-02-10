@@ -5,15 +5,15 @@ from localflavor.us.models import USStateField
 from util.models import CreatedMixin, UpdatedMixin
 
 
-class GVAIncident(CreatedMixin):
+class GVAIncident(CreatedMixin, UpdatedMixin):
 
     base_path = "http://www.gunviolencearchive.org/incident/"
 
     date = models.DateTimeField(
         _("date"))
-    categories = models.ManyToManyField(
-        "crime.GVAIncidentCategory",
-        verbose_name=_("categories"))
+    tags = models.ManyToManyField(
+        "taxonomy.Tag",
+        verbose_name=_("tags"))
     city_county = models.CharField(
         _("city or county"),
         max_length=128)
@@ -39,17 +39,3 @@ class GVAIncident(CreatedMixin):
     @property
     def url(self):
         return self.base_path + str(self.gva_id)
-
-
-class GVAIncidentCategory(CreatedMixin, UpdatedMixin):
-
-    name = models.CharField(
-        _("name"),
-        max_length=128,
-        unique=True)
-
-    class Meta:
-        ordering = ["name"]
-
-    def __str__(self):
-        return self.name

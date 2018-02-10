@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "rest_framework",
     # custom
     "crime",
+    "taxonomy",
     "util"
 ]
 

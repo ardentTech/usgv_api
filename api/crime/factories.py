@@ -20,18 +20,10 @@ class GVAIncidentFactory(factory.DjangoModelFactory):
         model = "crime.GVAIncident"
 
     @factory.post_generation
-    def categories(self, create, extracted, **kwargs):
+    def tags(self, create, extracted, **kwargs):
         if not create:
             return
 
         if extracted:
-            for category in extracted:
-                self.categories.add(category)
-
-
-class GVAIncidentCategoryFactory(factory.DjangoModelFactory):
-
-    name = factory.Sequence(lambda n: "name-{0}".format(n))
-
-    class Meta:
-        model = "crime.GVAIncidentCategory"
+            for tag in extracted:
+                self.tags.add(tag)
