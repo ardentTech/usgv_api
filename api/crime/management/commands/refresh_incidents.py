@@ -1,9 +1,12 @@
 from django.core.management.base import BaseCommand
 
+from crime.spiders import MassShootingSpider
+
 
 # @todo
 # use `bulk_create` to reduce DB bottle-necking
 # how to reconcile incidents appearing in multiple groups? can this be done with `bulk_create`?
+# create a report each time this is run?
 
 # REPORTS
 # children killed
@@ -26,23 +29,19 @@ from django.core.management.base import BaseCommand
 
 class Command(BaseCommand):
 
+    def __init__(self, *args, **kwargs):
+        self.incidents = {}
+        super(Command, self).__init__(*args, **kwargs)
+
     def handle(self, *args, **kwargs):
         # if no DB records, get all
         # else get delta since last record
-        pass
+        self._get_mass_shootings()
 
     # PRIVATE
 
-    # @todo abstract this away
-    def _create(self, name, **kwargs):
-        records = getattr(self, "_create_" + name)(**kwargs)
-        print("created {0} {1}".format(len(records), name))
-        return records
-
-    def _get_incidents_since(self, timestamp=None):
-        # determine which crawler to use for which... GVAIncidentCategory?
-        # what about years?
-        pass
-
-    def _get_incidents(self):
-        pass
+    def _get_mass_shootings(self):
+        ms = MassShootingSpider(year=2018)
+        ms.crawl()
+        print(ms.column_names)
+        print(ms.row_data)
