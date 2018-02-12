@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 from collections import OrderedDict
 import re
 import requests
+from time import sleep
 
 
 class Spider(object):
@@ -98,6 +99,7 @@ class MassShootingSpider(PaginatedTableSpider):
                 self._row_data[uid] = data
             if fresh:
                 url = self.get_next_page(url)
+                sleep(1)
 
     # @todo this might be trying to do too much...
     # @todo maybe have a method named `get_uid`???

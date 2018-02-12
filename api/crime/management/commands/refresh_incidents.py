@@ -49,10 +49,17 @@ class Command(BaseCommand):
         return incident
 
     def _create_mass_shootings(self):
-        tag = Tag.objects.get_or_create(name="mass_shooting")[0]
         incidents = []
+        stop_year = datetime.date.today().year
+        tag = Tag.objects.get_or_create(name="mass_shooting")[0]
 
-        for year in range(2014, 2019):
+        try:
+            start_year = GVAIncident.objects.all().order_by("-date")[0].date.year
+            years = range(start_year, stop_year)
+        except IndexError as e:
+            years = range(2014, stop_year)
+
+        for year in years:
             rows = self._get_mass_shootings(year)
             incidents += [self._create_incident(self._row_to_attrs(row), tag) for row in rows]
 
