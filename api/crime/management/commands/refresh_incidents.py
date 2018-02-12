@@ -48,9 +48,10 @@ class Command(BaseCommand):
         incident.tags.add(tag)
         return incident
 
+    # @todo handle update-only
     def _create_mass_shootings(self):
         incidents = []
-        stop_year = datetime.date.today().year
+        stop_year = datetime.date.today().year + 1
         tag = Tag.objects.get_or_create(name="mass_shooting")[0]
 
         try:

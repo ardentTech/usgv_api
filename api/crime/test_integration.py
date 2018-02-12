@@ -23,7 +23,7 @@ class GVAIncidentTestCase(BaseAPITestCase):
 
     def test_get_filter_date_ok(self):
         date1 = datetime.date.today()
-        date2 = datetime.date.today() - datetime.timedelta(days=5)
+        date2 = date1 - datetime.timedelta(days=5)
         GVAIncidentFactory.create(date=date1)
         GVAIncidentFactory.create(date=date2)
 
@@ -47,3 +47,11 @@ class GVAIncidentTestCase(BaseAPITestCase):
 
         response = self.client.get(self.endpoint + "?tags={0}".format(tag1.id))
         self.assert_get_ok(response, count=1)
+
+    def test_get_years_ok(self):
+        today = datetime.date.today()
+        one = GVAIncidentFactory.create(date=today - datetime.timedelta(days=365))
+        two = GVAIncidentFactory.create(date=today)
+        response = self.client.get(reverse("api:gva-incident-years"))
+        self.assert_get_ok(response)
+        self.assertEqual(self.get_content(response), [one.date.year, two.date.year])
