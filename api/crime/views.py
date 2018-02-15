@@ -1,3 +1,6 @@
+from django.db.models import Sum
+
+from rest_framework import status
 from rest_framework.decorators import list_route
 from rest_framework.mixins import ListModelMixin
 from rest_framework.response import Response
@@ -5,14 +8,33 @@ from rest_framework.viewsets import GenericViewSet
 
 from .filters import GVAIncidentFilter
 from .models import GVAIncident
-from .serializers import GVAIncidentSerializer
+from .serializers import GVAIncidentSerializer, GVAIncidentStatsSerializer
 
 
 class GVAIncidentViewSet(ListModelMixin, GenericViewSet):
 
     filter_class = GVAIncidentFilter
+    page_size = None
     queryset = GVAIncident.objects.all()
     serializer_class = GVAIncidentSerializer
+
+    @list_route(methods=["get"], url_path="yearly-stats")
+    def yearly_stats(self, request):
+        incidents = GVAIncident.objects.extra(
+            select={"year": "CAST(EXTRACT(year FROM date) as INT)"}).values(
+                "year", "state").annotate(
+                    killed=Sum("killed"), injured=Sum("injured")).order_by("year", "state")
+
+        page = self.paginate_queryset(incidents)
+        if page is not None:
+            serializer = GVAIncidentStatsSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        else:
+            if serializer.is_valid():
+                return Response(serializer.data)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @list_route(methods=["get"], url_path="years")
     def years(self, request):

@@ -8,7 +8,7 @@ class GVAIncidentFilter(django_filters.FilterSet):
     class Meta:
         model = GVAIncident
         fields = {
-            "date": ["year"],
+            "date": ["exact", "year"],
             "state": ["exact"],
             "tags": ["exact"]
         }

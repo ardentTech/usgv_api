@@ -11,3 +11,12 @@ class GVAIncidentSerializer(serializers.ModelSerializer):
     class Meta:
         fields = "__all__"
         model = GVAIncident
+
+
+class GVAIncidentStatsSerializer(serializers.ModelSerializer):
+
+    year = serializers.IntegerField()
+
+    class Meta:
+        fields = ["injured", "killed", "state", "year"]
+        model = GVAIncident
