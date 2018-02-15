@@ -1,6 +1,5 @@
 from django.db.models import Sum
 
-from rest_framework import status
 from rest_framework.decorators import list_route
 from rest_framework.mixins import ListModelMixin
 from rest_framework.response import Response
@@ -30,11 +29,8 @@ class GVAIncidentViewSet(ListModelMixin, GenericViewSet):
             serializer = GVAIncidentStatsSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        else:
-            if serializer.is_valid():
-                return Response(serializer.data)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = GVAIncidentStatsSerializer(incidents, many=True)
+        return Response(serializer.data)
 
     @list_route(methods=["get"], url_path="years")
     def years(self, request):
