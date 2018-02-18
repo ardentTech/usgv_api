@@ -9,7 +9,8 @@ class GVAIncidentSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True)
 
     class Meta:
-        fields = "__all__"
+        fields = [
+            "city_county", "date", "id", "injured", "killed", "state", "street", "tags", "url"]
         model = GVAIncident
 
 
