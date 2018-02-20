@@ -6,10 +6,12 @@ from django.contrib import admin
 from rest_framework import routers
 
 from crime.views import GVAIncidentViewSet
+from geo.views import UsStateViewSet
 
 
 router = routers.DefaultRouter()
 router.register(r"gva-incident", GVAIncidentViewSet, base_name="gva-incident")
+router.register(r"us-state", UsStateViewSet, base_name="us-state")
 
 urlpatterns = [
     url(r"^v1/", include(router.urls, namespace="api")),

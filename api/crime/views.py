@@ -13,7 +13,6 @@ from .serializers import GVAIncidentSerializer, GVAIncidentStatsSerializer
 class GVAIncidentViewSet(ListModelMixin, GenericViewSet):
 
     filter_class = GVAIncidentFilter
-    page_size = None
     queryset = GVAIncident.objects.all()
     serializer_class = GVAIncidentSerializer
 
