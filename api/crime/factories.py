@@ -2,7 +2,6 @@ import datetime
 
 import factory
 from factory import Faker, fuzzy
-from localflavor.us.us_states import US_STATES
 
 
 class GVAIncidentFactory(factory.DjangoModelFactory):
@@ -12,7 +11,7 @@ class GVAIncidentFactory(factory.DjangoModelFactory):
     gva_id = fuzzy.FuzzyInteger(1000)
     injured = fuzzy.FuzzyInteger(10)
     killed = fuzzy.FuzzyInteger(10)
-    state = fuzzy.FuzzyChoice([s[0] for s in US_STATES])
+    state = factory.SubFactory("geo.factories.UsStateFactory")
     street = Faker("pystr", max_chars=128)
 
     class Meta:

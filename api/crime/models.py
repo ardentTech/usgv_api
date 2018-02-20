@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-from localflavor.us.models import USStateField
 from util.models import CreatedMixin, UpdatedMixin
 
 
@@ -24,8 +23,9 @@ class GVAIncident(CreatedMixin, UpdatedMixin):
         _("# injured"))
     killed = models.PositiveIntegerField(
         _("# killed"))
-    state = USStateField(
-        _("us state"))
+    state = models.ForeignKey(
+        "geo.UsState",
+        verbose_name=_("US state"))
     street = models.CharField(
         _("steet"),
         max_length=128)

@@ -2,8 +2,6 @@ import datetime
 
 from django.core.management.base import BaseCommand
 
-from localflavor.us.us_states import STATES_NORMALIZED
-
 from crime.spiders import MassShootingSpider
 from crime.models import GVAIncident
 from taxonomy.models import Tag

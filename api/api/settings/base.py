@@ -59,7 +59,6 @@ INSTALLED_APPS = [
     # 3rd party
     "corsheaders",
     "django_filters",
-    "localflavor",
     "rest_framework",
     # custom
     "crime",

@@ -2,9 +2,8 @@ import datetime
 
 from django.core.urlresolvers import reverse
 
-from localflavor.us.us_states import STATES_NORMALIZED
-
 from crime.factories import GVAIncidentFactory
+from geo.factories import UsStateFactory
 from taxonomy.factories import TagFactory
 from util.testing import BaseAPITestCase
 
@@ -34,12 +33,12 @@ class GVAIncidentTestCase(BaseAPITestCase):
         pass
 
     def test_get_filter_state_exact_ok(self):
-        state1 = STATES_NORMALIZED["colorado"]
-        state2 = STATES_NORMALIZED["california"]
+        state1 = UsStateFactory.create()
+        state2 = UsStateFactory.create()
         GVAIncidentFactory.create(state=state1)
         GVAIncidentFactory.create(state=state2)
 
-        response = self.client.get(self.endpoint + "?state={0}".format(state1))
+        response = self.client.get(self.endpoint + "?state={0}".format(state1.id))
         self.assert_get_ok(response, count=1)
 
     def test_get_filter_tag_exact_ok(self):
@@ -54,26 +53,30 @@ class GVAIncidentTestCase(BaseAPITestCase):
     def test_get_yearly_stats_ok(self):
         today = datetime.date.today()
         one_year_ago = today - datetime.timedelta(days=365)
+        state1 = UsStateFactory.create()
+        state2 = UsStateFactory.create()
+        state3 = UsStateFactory.create()
+
         GVAIncidentFactory.create(
             date=one_year_ago,
             injured=5,
             killed=7,
-            state=STATES_NORMALIZED["arkansas"])
+            state=state1)
         GVAIncidentFactory.create(
             date=one_year_ago,
             injured=6,
             killed=8,
-            state=STATES_NORMALIZED["alabama"])
+            state=state1)
         GVAIncidentFactory.create(
             date=today,
             injured=6,
             killed=8,
-            state=STATES_NORMALIZED["alabama"])
+            state=state2)
         GVAIncidentFactory.create(
             date=today,
             injured=7,
             killed=9,
-            state=STATES_NORMALIZED["alabama"])
+            state=state3)
 
         response = self.client.get(reverse("api:gva-incident-yearly-stats"))
         self.assert_get_ok(response, count=3)

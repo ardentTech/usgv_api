@@ -21,7 +21,8 @@ class GVAIncidentViewSet(ListModelMixin, GenericViewSet):
         incidents = GVAIncident.objects.extra(
             select={"year": "CAST(EXTRACT(year FROM date) as INT)"}).values(
                 "year", "state").annotate(
-                    killed=Sum("killed"), injured=Sum("injured")).order_by("year", "state")
+                    killed=Sum("killed"),
+                    injured=Sum("injured")).order_by("year", "state__postal_code")
 
         page = self.paginate_queryset(incidents)
         if page is not None:
