@@ -16,6 +16,7 @@ build() {
     migrate
     test
     seed
+    refresh_incidents
 }
 
 createsuperuser() {
@@ -34,6 +35,12 @@ migrate() {
     echo
     echo "########### MIGRATE ###########"
     cd ${DJANGO} && ${PM} migrate ${SETTINGS}
+}
+
+refresh_incidents() {
+    echo
+    echo "########### REFRESH INCIDENTS ###########"
+    cd ${DJANGO} && ${PM} refresh_incidents ${SETTINGS}
 }
 
 runserver() {

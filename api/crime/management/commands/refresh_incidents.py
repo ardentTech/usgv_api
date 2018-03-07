@@ -4,29 +4,15 @@ from django.core.management.base import BaseCommand
 
 from crime.spiders import MassShootingSpider
 from crime.models import GVAIncident
+from geo.models import UsState
 from taxonomy.models import Tag
-
-
-# @todo create a report each time this is run?
-
-# REPORTS
-# children killed
-# children injured
-# teens killed
-# teens injured
-# accidental deaths
-# accidental injuries
-# accidental deaths (children ages 0-11)
-# accidental injuries (children ages 0-11)
-# accidental deaths (teens ages 12-17)
-# accidental injuries (teens ages 12-17)
-# officer involved shootings
 
 
 class Command(BaseCommand):
 
     def __init__(self, *args, **kwargs):
         self.incidents = {}
+        self.us_states = {o.name.lower(): o for o in UsState.objects.all()}
         super(Command, self).__init__(*args, **kwargs)
 
     def handle(self, *args, **kwargs):
@@ -76,6 +62,6 @@ class Command(BaseCommand):
             "gva_id": int(row[6]),
             "injured": int(row[5]),
             "killed": int(row[4]),
-            "state": STATES_NORMALIZED[row[1].lower()],
+            "state": self.us_states[row[1].lower()],
             "street": row[3]
         }
