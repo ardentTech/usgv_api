@@ -26,3 +26,7 @@ class GVAIncidentStatsSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ["injured", "killed", "state", "year"]
         model = GVAIncident
+
+    def to_representation(self, obj):
+        obj["victims"] = obj["injured"] + obj["killed"]
+        return obj
