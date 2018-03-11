@@ -1,6 +1,7 @@
 import datetime
 
 from django.core.management.base import BaseCommand
+from django.db.utils import IntegrityError
 
 from crime.spiders import MassShootingSpider
 from crime.models import GVAIncident
@@ -16,14 +17,12 @@ class Command(BaseCommand):
         super(Command, self).__init__(*args, **kwargs)
 
     def handle(self, *args, **kwargs):
-        # if no DB records, get all
-        # else get delta since last record
-        self._create("mass_shootings")
+        self._import("mass_shootings")
 
     # PRIVATE
 
-    def _create(self, name, **kwargs):
-        records = getattr(self, "_create_" + name)(**kwargs)
+    def _import(self, name, **kwargs):
+        records = getattr(self, "_import_" + name)(**kwargs)
         print("created {0} {1}".format(len(records), name))
         return records
 
@@ -32,8 +31,7 @@ class Command(BaseCommand):
         incident.tags.add(tag)
         return incident
 
-    # @todo handle update-only
-    def _create_mass_shootings(self):
+    def _import_mass_shootings(self):
         incidents = []
         stop_year = datetime.date.today().year + 1
         tag = Tag.objects.get_or_create(name="mass_shooting")[0]
@@ -45,8 +43,11 @@ class Command(BaseCommand):
             years = range(2014, stop_year)
 
         for year in years:
-            rows = self._get_mass_shootings(year)
-            incidents += [self._create_incident(self._row_to_attrs(row), tag) for row in rows]
+            for row in self._get_mass_shootings(year):
+                try:
+                    incidents.append(self._create_incident(self._row_to_attrs(row), tag))
+                except IntegrityError:
+                    pass
 
         return incidents
 
