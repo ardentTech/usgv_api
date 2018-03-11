@@ -1,4 +1,5 @@
 import datetime
+from pytz import timezone
 
 from django.core.management.base import BaseCommand
 from django.db.utils import IntegrityError
@@ -59,7 +60,8 @@ class Command(BaseCommand):
     def _row_to_attrs(self, row):
         return {
             "city_county": row[2],
-            "date": datetime.datetime.strptime(row[0], "%B %d, %Y").date(),
+            "date": datetime.datetime.strptime(
+                row[0], "%B %d, %Y").replace(tzinfo=timezone("UTC")).date(),
             "gva_id": int(row[6]),
             "injured": int(row[5]),
             "killed": int(row[4]),
