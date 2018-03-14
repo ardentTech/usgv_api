@@ -1,4 +1,4 @@
-from django.db.models import Sum
+from django.db.models import Count, Sum
 
 from rest_framework.decorators import list_route
 from rest_framework.mixins import ListModelMixin
@@ -21,6 +21,7 @@ class GVAIncidentViewSet(ListModelMixin, GenericViewSet):
         incidents = GVAIncident.objects.extra(
             select={"year": "CAST(EXTRACT(year FROM date) as INT)"}).values(
                 "year", "state").annotate(
+                    incidents=Count("id"),
                     killed=Sum("killed"),
                     injured=Sum("injured")).order_by("year", "state__postal_code")
 
