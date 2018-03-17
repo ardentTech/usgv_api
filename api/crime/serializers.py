@@ -14,7 +14,8 @@ class GVAIncidentSerializer(serializers.ModelSerializer):
             "killed",
             "state",
             "street",
-            "url"]
+            "url",
+            "victims"]
         model = GVAIncident
 
 

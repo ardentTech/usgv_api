@@ -39,3 +39,7 @@ class GVAIncident(CreatedMixin, UpdatedMixin):
     @property
     def url(self):
         return self.base_path + str(self.gva_id)
+
+    @property
+    def victims(self):
+        return self.injured + self.killed
