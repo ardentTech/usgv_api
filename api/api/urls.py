@@ -5,7 +5,7 @@ from django.contrib import admin
 
 from rest_framework import routers
 
-from crime.views import GVAIncidentViewSet
+from crime.views import GVAIncidentViewSet, GVAStats
 from geo.views import UsStateViewSet
 
 
@@ -15,6 +15,8 @@ router.register(r"us-state", UsStateViewSet, base_name="us-state")
 
 urlpatterns = [
     url(r"^v1/", include(router.urls, namespace="api")),
+    # @todo integrate with default router
+    url(r"^v1/gva-stats/", GVAStats.as_view(), name="gva-stats"),
     url(r"^grappelli/", include("grappelli.urls")),
     url(r"^admin/", admin.site.urls),
 ]
