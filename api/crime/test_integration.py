@@ -90,53 +90,34 @@ class GVAIncidentTestCase(BaseAPITestCase):
         self.assertEqual(self.get_content(response), [one.date.year, two.date.year])
 
 
-#class GVAStatsTestCase(BaseAPITestCase):
-#
-#    endpoint = reverse("gva-stats")
-#
-#    def test_get_explicit_year_ok(self):
-#        for i in range(5):
-#            GVAIncidentFactory.create()
-#        response = self.client.get(self.endpoint)
-#        self.assert_get_ok(response)
-#
-#        today = datetime.date.today()
-#        state = UsStateFactory.create()
-#
-#        GVAIncidentFactory.create(date=today, state=state)
-#        GVAIncidentFactory.create(date=(today - datetime.timedelta(days=365)), state=state)
-#
-#        response = self.client.get(self.endpoint + "?year={}".format(today.year))
-#        self.assert_get_ok(response)
-#        self.assertEqual(self.get_content(response)[0]["incidents"], 1)
-#
-#    def test_get_default_year_ok(self):
-#        today = datetime.date.today()
-#        state = UsStateFactory.create()
-#
-#        GVAIncidentFactory.create(date=today, state=state)
-#        GVAIncidentFactory.create(date=(today - datetime.timedelta(days=365)), state=state)
-#
-#        response = self.client.get(self.endpoint)
-#        self.assert_get_ok(response)
-#        self.assertEqual(self.get_content(response)[0]["incidents"], 1)
-#
-#    def test_get_no_state_ok(self):
-#        today = datetime.date.today()
-#        count = 3
-#        for i in range(count):
-#            GVAIncidentFactory.create(date=today)
-#
-#        response = self.client.get(self.endpoint)
-#        self.assert_get_ok(response)
-#        self.assertEqual(self.get_content(response)[0]["incidents"], count)
-#
-#    def test_get_explicit_state_ok(self):
-#        today = datetime.date.today()
-#        state = UsStateFactory.create()
-#        GVAIncidentFactory.create(date=today, state=state)
-#        GVAIncidentFactory.create(date=today)
-#
-#        response = self.client.get(self.endpoint + "?state={}".format(state.id))
-#        self.assert_get_ok(response)
-#        self.assertEqual(self.get_content(response)[0]["incidents"], 1)
+class GVAStatsTestCase(BaseAPITestCase):
+
+    endpoint = reverse("gva-stats")
+
+    def test_get_year_param_required(self):
+        with self.assertRaises(ValueError):
+            self.client.get(self.endpoint)
+
+    def test_get_without_state_param(self):
+        for i in range(5):
+            GVAIncidentFactory.create()
+
+        response = self.client.get(self.endpoint + "?year={}".format(datetime.date.today().year))
+        self.assert_get_ok(response)
+        self._assert_common_keys(self.get_content(response).keys())
+
+    def test_get_with_state_param(self):
+        state = UsStateFactory.create()
+        for i in range(5):
+            GVAIncidentFactory.create(state=state)
+
+        response = self.client.get(
+            self.endpoint + "?year={}&state={}".format(datetime.date.today().year, state.id))
+        self.assert_get_ok(response)
+        self._assert_common_keys(self.get_content(response).keys())
+
+    # PRIVATE
+
+    def _assert_common_keys(self, keys):
+        for k in ["incidents", "injured", "killed", "victims"]:
+            self.assertIn(k, keys)
