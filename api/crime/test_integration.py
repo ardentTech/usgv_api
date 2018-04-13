@@ -50,7 +50,45 @@ class GVAIncidentTestCase(BaseAPITestCase):
         response = self.client.get(self.endpoint + "?tags={0}".format(tag1.id))
         self.assert_get_ok(response, count=1)
 
-    def test_get_yearly_stats_ok(self):
+    def test_get_stats_country_ok(self):
+        state1 = UsStateFactory.create()
+        state2 = UsStateFactory.create()
+        today = datetime.date.today()
+        GVAIncidentFactory.create(
+            date=today,
+            injured=5,
+            killed=7,
+            state=state1)
+        GVAIncidentFactory.create(
+            date=today,
+            injured=6,
+            killed=8,
+            state=state2)
+
+        response = self.client.get(reverse("api:gva-incident-stats-country"))
+        self.assert_get_ok(response)
+        content = self.get_content(response)
+
+        self.assertEqual(content["injured"], 11)
+        self.assertEqual(content["killed"], 15)
+        self.assertEqual(content["victims"], 26)
+
+        self.assertEqual(content["least"]["injured"]["value"], 5)
+        self.assertEqual(content["least"]["injured"]["states"], [state1.id])
+        self.assertEqual(content["most"]["injured"]["value"], 6)
+        self.assertEqual(content["most"]["injured"]["states"], [state2.id])
+
+        self.assertEqual(content["least"]["killed"]["value"], 7)
+        self.assertEqual(content["least"]["killed"]["states"], [state1.id])
+        self.assertEqual(content["most"]["killed"]["value"], 8)
+        self.assertEqual(content["most"]["killed"]["states"], [state2.id])
+
+        self.assertEqual(content["least"]["victims"]["value"], 12)
+        self.assertEqual(content["least"]["victims"]["states"], [state1.id])
+        self.assertEqual(content["most"]["victims"]["value"], 14)
+        self.assertEqual(content["most"]["victims"]["states"], [state2.id])
+
+    def test_get_stats_states_ok(self):
         today = datetime.date.today()
         one_year_ago = today - datetime.timedelta(days=365)
         state1 = UsStateFactory.create()
@@ -78,7 +116,7 @@ class GVAIncidentTestCase(BaseAPITestCase):
             killed=9,
             state=state3)
 
-        response = self.client.get(reverse("api:gva-incident-yearly-stats"))
+        response = self.client.get(reverse("api:gva-incident-stats-states"))
         self.assert_get_ok(response, count=3)
 
     def test_get_years_ok(self):
@@ -88,36 +126,3 @@ class GVAIncidentTestCase(BaseAPITestCase):
         response = self.client.get(reverse("api:gva-incident-years"))
         self.assert_get_ok(response)
         self.assertEqual(self.get_content(response), [one.date.year, two.date.year])
-
-
-class GVAStatsTestCase(BaseAPITestCase):
-
-    endpoint = reverse("gva-stats")
-
-    def test_get_year_param_required(self):
-        with self.assertRaises(ValueError):
-            self.client.get(self.endpoint)
-
-    def test_get_without_state_param(self):
-        for i in range(5):
-            GVAIncidentFactory.create()
-
-        response = self.client.get(self.endpoint + "?year={}".format(datetime.date.today().year))
-        self.assert_get_ok(response)
-        self._assert_common_keys(self.get_content(response).keys())
-
-    def test_get_with_state_param(self):
-        state = UsStateFactory.create()
-        for i in range(5):
-            GVAIncidentFactory.create(state=state)
-
-        response = self.client.get(
-            self.endpoint + "?year={}&state={}".format(datetime.date.today().year, state.id))
-        self.assert_get_ok(response)
-        self._assert_common_keys(self.get_content(response).keys())
-
-    # PRIVATE
-
-    def _assert_common_keys(self, keys):
-        for k in ["incidents", "injured", "killed", "victims"]:
-            self.assertIn(k, keys)

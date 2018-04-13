@@ -19,7 +19,7 @@ class GVAIncidentSerializer(serializers.ModelSerializer):
         model = GVAIncident
 
 
-class GVAIncidentStatsSerializer(serializers.ModelSerializer):
+class GVAIncidentStatsStatesSerializer(serializers.ModelSerializer):
 
     state = serializers.IntegerField()
     year = serializers.IntegerField()

@@ -1,15 +1,12 @@
-from django.db.models import Count, Sum
-
 from rest_framework.decorators import list_route
 from rest_framework.mixins import ListModelMixin
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
 from .filters import GVAIncidentFilter
-from .gva.stats import Calculator, Mode
 from .models import GVAIncident
-from .serializers import GVAIncidentSerializer, GVAIncidentStatsSerializer
+from .serializers import GVAIncidentSerializer, GVAIncidentStatsStatesSerializer
+from .stats import Calculator
 
 
 class GVAIncidentViewSet(ListModelMixin, GenericViewSet):
@@ -18,23 +15,23 @@ class GVAIncidentViewSet(ListModelMixin, GenericViewSet):
     queryset = GVAIncident.objects.all()
     serializer_class = GVAIncidentSerializer
 
-    @list_route(methods=["get"], url_path="yearly-stats")
-    def yearly_stats(self, request):
-        incidents = GVAIncident.objects.extra(
-            select={"year": "CAST(EXTRACT(year FROM date) as INT)"}).values(
-                "year", "state").annotate(
-                    incidents=Count("id"),
-                    killed=Sum("killed"),
-                    injured=Sum("injured")).order_by("year", "state__postal_code")
-
-        page = self.paginate_queryset(incidents)
+    @list_route(methods=["get"], url_path="stats-states")
+    def stats_states(self, request):
+        stats = Calculator().for_states()
+        page = self.paginate_queryset(stats)
         if page is not None:
-            serializer = GVAIncidentStatsSerializer(page, many=True)
+            serializer = GVAIncidentStatsStatesSerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        serializer = GVAIncidentStatsSerializer(incidents, many=True)
+        serializer = GVAIncidentStatsStatesSerializer(stats, many=True)
         return Response(serializer.data)
 
+    @list_route(methods=["get"], url_path="stats-country")
+    def stats_country(self, request):
+        stats = Calculator().for_country()
+        return Response(stats)
+
+    # @todo should this go on the model?
     @list_route(methods=["get"], url_path="years")
     def years(self, request):
         try:
@@ -44,19 +41,3 @@ class GVAIncidentViewSet(ListModelMixin, GenericViewSet):
         except:
             years = []
         return Response(years)
-
-
-class GVAStats(APIView):
-
-    def get(self, request, format=None):
-        filters = dict(date__year=request.query_params.get("year"))
-        calculator = Calculator()
-        calculator.mode = Mode.COUNTRY
-
-        state = request.query_params.get("state", None)
-        if state is not None:
-            filters["state"] = state
-            calculator.mode = Mode.STATE
-
-        incidents = GVAIncident.objects.filter(**filters)
-        return Response(calculator.run(incidents))
