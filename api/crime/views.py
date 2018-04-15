@@ -15,6 +15,18 @@ class GVAIncidentViewSet(ListModelMixin, GenericViewSet):
     queryset = GVAIncident.objects.all()
     serializer_class = GVAIncidentSerializer
 
+    @list_route(methods=["get"], url_path="stats-country")
+    def stats_country(self, request):
+        stats = Calculator().for_country(year=request.query_params.get("year"))
+        return Response(stats)
+
+    @list_route(methods=["get"], url_path="stats-state")
+    def stats_state(self, request):
+        stats = Calculator().for_state(
+            year=request.query_params.get("year"),
+            state=request.query_params.get("state"))
+        return Response(stats)
+
     @list_route(methods=["get"], url_path="stats-states")
     def stats_states(self, request):
         stats = Calculator().for_states()
@@ -25,11 +37,6 @@ class GVAIncidentViewSet(ListModelMixin, GenericViewSet):
 
         serializer = GVAIncidentStatsStatesSerializer(stats, many=True)
         return Response(serializer.data)
-
-    @list_route(methods=["get"], url_path="stats-country")
-    def stats_country(self, request):
-        stats = Calculator().for_country()
-        return Response(stats)
 
     # @todo should this go on the model?
     @list_route(methods=["get"], url_path="years")

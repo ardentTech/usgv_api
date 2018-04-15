@@ -8,7 +8,6 @@ from .models import GVAIncident
 
 class Calculator(object):
 
-    # /gva-incidents/stats/country
     def for_country(self, year=None):
         incidents = GVAIncident.objects.filter(date__year=year) if year is not None else GVAIncident.objects.all()
         results = dict(incidents=len(incidents), least=dict(), most=dict())
@@ -32,15 +31,19 @@ class Calculator(object):
                     op_func = operator.lt if metric == "least" else operator.gt
 
                     if val == results[metric][k]["value"]:
-                        results[metric][k]["states"].append(i.state.id)
+                        results[metric][k]["states"].append(i.state.fips_code)
                     elif op_func(val, results[metric][k]["value"]):
                         results[metric][k]["value"] = val
-                        results[metric][k]["states"] = [i.state.id]
+                        results[metric][k]["states"] = [i.state.fips_code]
+
+        for m in metrics:
+            for c in categories:
+                results[m][c]["states"] = set(results[m][c]["states"])
 
         results["victims"] = results["injured"] + results["killed"]
         return results
 
-    # /gva-incidents/stats/states
+    # @todo victims = injured + killed
     def for_states(self):
         return GVAIncident.objects.extra(
             select={"year": "CAST(EXTRACT(year FROM date) as INT)"}).values(
@@ -49,6 +52,11 @@ class Calculator(object):
                     killed=Sum("killed"),
                     injured=Sum("injured")).order_by("year", "state__postal_code")
 
-    # /gva-incidents/stats/states/<id>
-    def for_state(self, state):
-        pass
+    def for_state(self, state, year):
+        data = GVAIncident.objects.values("state").annotate(
+            incidents=Count("id"),
+            injured=Sum("injured"),
+            killed=Sum("killed")
+        ).filter(date__year=year, state=state)[0]
+        data["year"] = int(year)
+        return data

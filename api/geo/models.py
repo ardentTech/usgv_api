@@ -1,3 +1,5 @@
+from collections import Counter
+
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -19,3 +21,7 @@ class UsState(models.Model):
 
     def __str__(self):
         return self.name
+
+    @classmethod
+    def counter(self, attr):
+        return Counter(list(map(lambda s: getattr(s, attr), self.objects.all())))
