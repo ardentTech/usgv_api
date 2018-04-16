@@ -40,10 +40,8 @@ class Calculator(object):
             for c in categories:
                 results[m][c]["states"] = set(results[m][c]["states"])
 
-        results["victims"] = results["injured"] + results["killed"]
         return results
 
-    # @todo victims = injured + killed
     def for_states(self):
         return GVAIncident.objects.extra(
             select={"year": "CAST(EXTRACT(year FROM date) as INT)"}).values(

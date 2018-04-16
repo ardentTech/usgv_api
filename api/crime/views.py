@@ -5,7 +5,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from .filters import GVAIncidentFilter
 from .models import GVAIncident
-from .serializers import GVAIncidentSerializer, GVAIncidentStatsStatesSerializer
+from .serializers import GVAIncidentSerializer, CountryStatsSerializer, StateStatsSerializer
 from .stats import Calculator
 
 
@@ -18,24 +18,21 @@ class GVAIncidentViewSet(ListModelMixin, GenericViewSet):
     @list_route(methods=["get"], url_path="stats-country")
     def stats_country(self, request):
         stats = Calculator().for_country(year=request.query_params.get("year"))
-        return Response(stats)
+        serializer = CountryStatsSerializer(stats)
+        return Response(serializer.data)
 
     @list_route(methods=["get"], url_path="stats-state")
     def stats_state(self, request):
         stats = Calculator().for_state(
             year=request.query_params.get("year"),
             state=request.query_params.get("state"))
-        return Response(stats)
+        serializer = StateStatsSerializer(stats)
+        return Response(serializer.data)
 
     @list_route(methods=["get"], url_path="stats-states")
     def stats_states(self, request):
         stats = Calculator().for_states()
-        page = self.paginate_queryset(stats)
-        if page is not None:
-            serializer = GVAIncidentStatsStatesSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = GVAIncidentStatsStatesSerializer(stats, many=True)
+        serializer = StateStatsSerializer(stats, many=True)
         return Response(serializer.data)
 
     # @todo should this go on the model?
