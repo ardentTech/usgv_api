@@ -51,10 +51,11 @@ class Calculator(object):
                     injured=Sum("injured")).order_by("year", "state__postal_code")
 
     def for_state(self, state, year):
-        data = GVAIncident.objects.values("state").annotate(
+        data = GVAIncident.objects.filter(date__year=year, state=state).aggregate(
             incidents=Count("id"),
             injured=Sum("injured"),
             killed=Sum("killed")
-        ).filter(date__year=year, state=state)[0]
+        )
+        data["state"] = int(state)
         data["year"] = int(year)
         return data
