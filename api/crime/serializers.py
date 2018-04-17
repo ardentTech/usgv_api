@@ -17,28 +17,3 @@ class GVAIncidentSerializer(serializers.ModelSerializer):
             "url",
             "victims"]
         model = GVAIncident
-
-
-class CountryStatsSerializer(serializers.ModelSerializer):
-
-    incidents = serializers.IntegerField()
-    injured = serializers.IntegerField()
-    killed = serializers.IntegerField()
-
-    def to_representation(self, obj):
-        obj["victims"] = obj["injured"] + obj["killed"]
-        return obj
-
-
-class StateStatsSerializer(serializers.ModelSerializer):
-
-    state = serializers.IntegerField()
-    year = serializers.IntegerField()
-
-    class Meta:
-        fields = ["incidents", "injured", "killed", "state", "year"]
-        model = GVAIncident
-
-    def to_representation(self, obj):
-        obj["victims"] = obj["injured"] + obj["killed"]
-        return obj

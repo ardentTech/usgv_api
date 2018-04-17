@@ -53,19 +53,28 @@ class Calculator(object):
         return data
 
     def for_states(self):
-        return GVAIncident.objects.extra(
+        data = GVAIncident.objects.extra(
             select={"year": "CAST(EXTRACT(year FROM date) as INT)"}).values(
                 "year", "state").annotate(
                     incidents=Count("id"),
                     killed=Sum("killed"),
                     injured=Sum("injured")).order_by("year", "state__postal_code")
+        for d in data:
+            d["victims"] = d["injured"] + d["killed"]
+        return data
 
     def for_state(self, state, year):
         data = GVAIncident.objects.filter(date__year=year, state=state).aggregate(
             incidents=Count("id"),
             injured=Sum("injured"),
-            killed=Sum("killed")
-        )
+            killed=Sum("killed"))
+        if data["incidents"] > 0:
+            data["victims"] = data["injured"] + data["killed"]
+        else:
+            data["incidents"] = 0
+            data["injured"] = 0
+            data["killed"] = 0
+            data["victims"] = 0
         data["state"] = int(state)
         data["year"] = int(year)
         return data
