@@ -8,39 +8,49 @@ from .models import GVAIncident
 
 class Calculator(object):
 
-    def for_country(self, year=None):
-        incidents = GVAIncident.objects.filter(date__year=year) if year is not None else GVAIncident.objects.all()
-        results = dict(incidents=len(incidents), least=dict(), most=dict())
-        # @todo make these enums
+    def for_country(self, year):
+        stats = GVAIncident.objects.filter(date__year=year).extra(
+            select={"year": "CAST(EXTRACT(year FROM date) as INT)"}).values(
+                "year", "state").annotate(
+                    incidents=Count("id"),
+                    killed=Sum("killed"),
+                    injured=Sum("injured")).order_by("year", "state__postal_code")
+
+        data = dict(incidents=0, least=dict(), most=dict())
         categories = ["injured", "killed", "victims"]
         metrics = ["least", "most"]
 
         for key in categories:
-            results[key] = 0
+            data[key] = 0
             for metric in metrics:
                 val = inf if metric == "least" else 0
-                results[metric][key] = dict(states=[], value=val)
+                data[metric][key] = dict(states=[], value=val)
 
-        for i in incidents:
-            results["injured"] += i.injured
-            results["killed"] += i.killed
+        for stat in stats:
+            data["incidents"] += stat["incidents"]
+            data["injured"] += stat["injured"]
+            data["killed"] += stat["killed"]
+            data["victims"] += stat["injured"] + stat["killed"]
 
-            for k in categories:
-                val = getattr(i, k)
+            for category in categories:
                 for metric in metrics:
                     op_func = operator.lt if metric == "least" else operator.gt
 
-                    if val == results[metric][k]["value"]:
-                        results[metric][k]["states"].append(i.state.fips_code)
-                    elif op_func(val, results[metric][k]["value"]):
-                        results[metric][k]["value"] = val
-                        results[metric][k]["states"] = [i.state.fips_code]
+                    if category == "victims":
+                        victims = stat["injured"] + stat["killed"]
+                        if victims == data[metric]["victims"]["value"]:
+                            data[metric]["victims"]["states"].append(stat["state"])
+                        elif op_func(victims, data[metric]["victims"]["value"]):
+                            data[metric]["victims"]["value"] = victims
+                            data[metric]["victims"]["states"] = [stat["state"]]
+                    else:
+                        if stat[category] == data[metric][category]["value"]:
+                            data[metric][category]["states"].append(stat["state"])
+                        elif op_func(stat[category], data[metric][category]["value"]):
+                            data[metric][category]["value"] = stat[category]
+                            data[metric][category]["states"] = [stat["state"]]
 
-        for m in metrics:
-            for c in categories:
-                results[m][c]["states"] = set(results[m][c]["states"])
-
-        return results
+        return data
 
     def for_states(self):
         return GVAIncident.objects.extra(

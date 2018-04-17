@@ -64,8 +64,14 @@ class GVAIncidentTestCase(BaseAPITestCase):
             injured=6,
             killed=8,
             state=state2)
+        GVAIncidentFactory.create(
+            date=(today - datetime.timedelta(days=365)),
+            injured=6,
+            killed=8,
+            state=state2)
 
-        response = self.client.get(reverse("api:gva-incident-stats-country"))
+        response = self.client.get(
+            reverse("api:gva-incident-stats-country") + "?year={}".format(today.year))
         self.assert_get_ok(response)
         content = self.get_content(response)
 
@@ -74,19 +80,19 @@ class GVAIncidentTestCase(BaseAPITestCase):
         self.assertEqual(content["victims"], 26)
 
         self.assertEqual(content["least"]["injured"]["value"], 5)
-        self.assertEqual(content["least"]["injured"]["states"], [state1.fips_code])
+        self.assertEqual(content["least"]["injured"]["states"], [state1.id])
         self.assertEqual(content["most"]["injured"]["value"], 6)
-        self.assertEqual(content["most"]["injured"]["states"], [state2.fips_code])
+        self.assertEqual(content["most"]["injured"]["states"], [state2.id])
 
         self.assertEqual(content["least"]["killed"]["value"], 7)
-        self.assertEqual(content["least"]["killed"]["states"], [state1.fips_code])
+        self.assertEqual(content["least"]["killed"]["states"], [state1.id])
         self.assertEqual(content["most"]["killed"]["value"], 8)
-        self.assertEqual(content["most"]["killed"]["states"], [state2.fips_code])
+        self.assertEqual(content["most"]["killed"]["states"], [state2.id])
 
         self.assertEqual(content["least"]["victims"]["value"], 12)
-        self.assertEqual(content["least"]["victims"]["states"], [state1.fips_code])
+        self.assertEqual(content["least"]["victims"]["states"], [state1.id])
         self.assertEqual(content["most"]["victims"]["value"], 14)
-        self.assertEqual(content["most"]["victims"]["states"], [state2.fips_code])
+        self.assertEqual(content["most"]["victims"]["states"], [state2.id])
 
     def test_get_stats_state_ok(self):
         state1 = UsStateFactory.create()
