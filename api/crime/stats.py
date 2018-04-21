@@ -4,53 +4,48 @@ import operator
 from django.db.models import Count, Sum
 
 from .models import GVAIncident
+from geo.models import UsState
 
 
+# @todo caching
 class Calculator(object):
 
+    # @todo this only parses states with incidents
     def for_country(self, year):
+        states = UsState.objects.all()
+        categories = ["incidents", "injured", "killed", "victims"]
+        metrics = {c: 0 for c in categories}
+        data = {s.id: metrics.copy() for s in states}
+
         stats = GVAIncident.objects.filter(date__year=year).extra(
             select={"year": "CAST(EXTRACT(year FROM date) as INT)"}).values(
                 "year", "state").annotate(
                     incidents=Count("id"),
                     killed=Sum("killed"),
                     injured=Sum("injured")).order_by("year", "state__postal_code")
-
-        data = dict(incidents=0, least=dict(), most=dict())
-        categories = ["injured", "killed", "victims"]
-        metrics = ["least", "most"]
-
-        for key in categories:
-            data[key] = 0
-            for metric in metrics:
-                val = inf if metric == "least" else 0
-                data[metric][key] = dict(states=[], value=val)
-
         for stat in stats:
-            data["incidents"] += stat["incidents"]
-            data["injured"] += stat["injured"]
-            data["killed"] += stat["killed"]
-            data["victims"] += stat["injured"] + stat["killed"]
+            for c in categories:
+                if c == "victims":
+                    data[stat["state"]][c] = stat["injured"] + stat["killed"]
+                else:
+                    data[stat["state"]][c] = stat[c]
 
+        payload = metrics.copy()
+        payload["least"] = {c: dict(states=[], value=inf) for c in categories}
+        payload["most"] = {c: dict(states=[], value=0) for c in categories}
+        for state_id, v in data.items():
             for category in categories:
-                for metric in metrics:
-                    op_func = operator.lt if metric == "least" else operator.gt
+                datum = v[category]
+                payload[category] += datum
+                for qualifier, op_func in [("least", operator.lt), ("most", operator.gt)]:
+                    qual_cat = payload[qualifier][category]
+                    if datum == qual_cat["value"]:
+                        qual_cat["states"].append(state_id)
+                    elif op_func(datum, qual_cat["value"]):
+                        qual_cat["value"] = datum
+                        qual_cat["states"] = [state_id]
 
-                    if category == "victims":
-                        victims = stat["injured"] + stat["killed"]
-                        if victims == data[metric]["victims"]["value"]:
-                            data[metric]["victims"]["states"].append(stat["state"])
-                        elif op_func(victims, data[metric]["victims"]["value"]):
-                            data[metric]["victims"]["value"] = victims
-                            data[metric]["victims"]["states"] = [stat["state"]]
-                    else:
-                        if stat[category] == data[metric][category]["value"]:
-                            data[metric][category]["states"].append(stat["state"])
-                        elif op_func(stat[category], data[metric][category]["value"]):
-                            data[metric][category]["value"] = stat[category]
-                            data[metric][category]["states"] = [stat["state"]]
-
-        return data
+        return payload
 
     def for_states(self):
         data = GVAIncident.objects.extra(
