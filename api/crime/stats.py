@@ -10,10 +10,11 @@ from geo.models import UsState
 # @todo caching
 class Calculator(object):
 
-    # @todo this only parses states with incidents
-    def for_country(self, year):
+    # @todo accept category param
+    def for_country(self, year, category=None):
         states = UsState.objects.all()
-        categories = ["incidents", "injured", "killed", "victims"]
+        categories = [category.lower()] if category is not None else [
+            "incidents", "injured", "killed", "victims"]
         metrics = {c: 0 for c in categories}
         data = {s.id: metrics.copy() for s in states}
 

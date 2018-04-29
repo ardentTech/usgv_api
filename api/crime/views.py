@@ -15,17 +15,7 @@ class GVAIncidentViewSet(ListModelMixin, GenericViewSet):
     queryset = GVAIncident.objects.all()
     serializer_class = GVAIncidentSerializer
 
-    @list_route(methods=["get"], url_path="stats-country")
-    def stats_country(self, request):
-        return Response(Calculator().for_country(year=request.query_params.get("year")))
-
-    @list_route(methods=["get"], url_path="stats-state")
-    def stats_state(self, request):
-        return Response(Calculator().for_state(
-            year=request.query_params.get("year"),
-            state=request.query_params.get("state")))
-
-    @list_route(methods=["get"], url_path="stats-states")
+    @list_route(methods=["get"], url_path="stats")
     def stats_states(self, request):
         return Response(Calculator().for_states())
 
